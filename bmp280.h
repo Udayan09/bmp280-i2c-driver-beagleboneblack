@@ -14,7 +14,9 @@
 #define BMP280_REG_TEMP_XSB         0xFC            //temp[3:0]
 
 #define BMP280_REG_TEMP_CAL_START       0x88            //Temp Calibration Data Start
-#define BMP280_REG_TEMP_CAL_COUNT      3               //Temp cal data count
+#define BMP280_REG_TEMP_CAL_COUNT       3               //Temp cal data count
 #define BMP280_REG_PRESS_CAL_START      0x8e            //Pressure Calibration Data Start
 #define BMP280_REG_PRESS_CAL_COUNT      9               //Temp cal data count
+
+#define BMP280_CHIP_ID      0x58
 
