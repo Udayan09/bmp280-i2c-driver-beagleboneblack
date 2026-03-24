@@ -7,7 +7,7 @@
 		__overlay__ {
 			pressure: bmp280@76 {
 				reg = <0x76>;
-				compatible = "bosch, bmp280";
+				compatible = "bosch,bmp280";
 			};
 		};
 	};
