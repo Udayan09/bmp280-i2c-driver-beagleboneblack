@@ -19,7 +19,38 @@ struct bmp280_data
 	struct regmap *regmap;
 
 	s32 t_fine;
-	
+}
+
+static const struct iio_chan_spec bmp280_channels = {
+	{
+		.type = IIO_PRESSURE,
+		.info_mask_seperate = BIT(IIO_CHAN_INFO_RAW),	
+	},
+	{
+		.type = IIO_TEMP,
+		.info_mask_seperate = BIT(IIO_CHAN_INFO_RAW),	
+	},
+};
+
+
+/*BMP280 Functions*/
+
+static int bmp280_read_raw(){
+	return 0;
+}
+
+static int bmp280_write_raw(){
+	return 0;
+}
+
+
+
+
+
+/*IIO Info struct for BMP280*/
+static const struct iio_info bmp280_info = {
+	.read_raw = &bmp280_read_raw,
+	.write_raw = &bmp280_write_raw,
 }
 
 
@@ -76,6 +107,7 @@ static int bmp280_probe(struct i2c_client *client, const struct i2c_device_id *i
 	const struct regmap_config *regmap_config;		//Holds Regmap configurations
 	struct device *dev = &client->dev;
 	unsigned int chip;
+	unsigned int chip_id;
 	const char *name;
 	int irq;
 	
@@ -101,11 +133,43 @@ static int bmp280_probe(struct i2c_client *client, const struct i2c_device_id *i
 
 
 	/*IIO configuration*/
-	indio_dev
+	indio_dev = devm_iio_device_alloc(dev, sizeof(*data));		//Allocate iio_dev for a driver. Memory is allocateds
+	if (!indio_dev)
+		return -ENOMEM;
+
+	data = iio_priv(indio_dev);
+
+	mutex_init(&data->lock);
+	data->dev = dev;
+
+	indio_dev->name = name;
+	indio_dev->info = &bmp280_info;
+	indio_dev->modes = INDIO_DIRECT_MODE;
+
+	indio_dev->channels = bmp280_channels;		//iio_chan_spec array
+	indio_dev->num_channels = 2;			//Temperature and Pressure
+
+	data->regmap = regmap;
+
+	/*Attempting to read chip id*/
+	ret = regmap_read(regmap, BMP280_REG_ID, &chip_id);		//Reads value at BMP280_CHIP_ID and stores in chip_id
+	if (ret) {
+		dev_err(data->dev, "failed to read chip id\n");
+		return ret;
+	}
+
+	if (chip_id == BMP280_CHIP_ID) 
+		dev_info(dev, "0x%x is the correct chip id for %s\n", chip_id, name);
+	else
+		dev_warm(dev, "bad chip id: 0x%x is not known\n", chip_id);
 
 
+	//Stores device private data
+	dev_set_drvdata(dev, indio_dev);		
 
 	dev_info(&client->dev, "BMP280 Probe Started\n");
+
+	return devm_iio_device_register(dev, indio_dev);	//Device managed device registration in the iio subsystem
 }
 
 
