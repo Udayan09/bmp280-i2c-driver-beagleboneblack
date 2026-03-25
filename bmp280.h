@@ -20,3 +20,25 @@
 
 #define BMP280_CHIP_ID      0x58
 
+
+/*Device Data Struct*/
+struct bmp280_data 
+{
+	struct device *dev;
+	struct mutex lock;		//Mutex Lock
+	struct regmap *regmap;
+
+    const struct bmp280_chip_info *chip_info;
+
+	s32 t_fine;
+};
+
+
+struct bmp280_chip_info {
+    unsigned int id_reg;            //Chip id reg addr
+    const u8 chip_id;              //Chip id
+
+    const struct regmap_config *regmap_config;      //regmap configurations
+    const struct iio_chan_spec *channels;           //iio spec channels
+    const int num_channels;         //Channel count                      
+};
