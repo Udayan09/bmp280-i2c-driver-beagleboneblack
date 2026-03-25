@@ -7,6 +7,7 @@
 #include <linux/device.h>
 #include <linux/iio/iio.h>
 #include <linux/iio/sysfs.h>
+#include <linux/regmap.h>
 
 
 #include "bmp280.h"
@@ -51,7 +52,7 @@ static int bmp280_write_raw(){
 static const struct iio_info bmp280_info = {
 	.read_raw = &bmp280_read_raw,
 	.write_raw = &bmp280_write_raw,
-}
+};
 
 
 /*Regmap config struct Setup*/
@@ -96,22 +97,46 @@ const struct regmap_config bmp280_regmap_config = {
 };
 
 
+/*static int bmp280_i2c_probe(struct i2c_client *client)
+{
+	const struct i2c_device_id *id = i2c_client_get_device_id(client);
+	const struct bmp280_chip_info *chip_info;
+	struct regmap *regmap;
+
+	chip_info = i2c_get_match_data(client);
+
+	regmap = devm_regmap_init_i2c(client, chip_info->regmap_config);
+	if (IS_ERR(regmap)) {
+		dev_err(&client->dev, "failed to allocate register map\n");
+		return PTR_ERR(regmap);
+	}
+
+	return bmp280_common_probe(&client->dev,
+				   regmap,
+				   chip_info,
+				   id->name,
+	*/
 
 /*Driver Probe Function*/
-static int bmp280_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int bmp280_i2c_probe(struct i2c_client *client)
 {
 	int ret;
+	const struct i2c_device_id *id;
 	struct iio_dev *indio_dev;	
 	struct bmp280_data *data;
 	struct regmap *regmap;
 	const struct regmap_config *regmap_config;		//Holds Regmap configurations
 	struct device *dev = &client->dev;
-	unsigned int chip;
-	unsigned int chip_id;
-	const char *name;
-	int irq;
+	// unsigned int chip;
+	// const char *name;
+	// int irq;
 	
-
+	//Get device id
+	id = i2c_client_get_device_id(client);
+	if (!id){
+		dev_err(dev, "No device ID found\n");
+		return -EINVAL;
+	}
 
 	/*Regmap configuration*/
 	if (id->driver_data == BMP280_CHIP_ID){
@@ -127,9 +152,9 @@ static int bmp280_probe(struct i2c_client *client, const struct i2c_device_id *i
 		return PTR_ERR(regmap);
 	}
 
-	chip = id->driver_data;
-	name = id->name;
-	irq = client->irq;
+	// chip = id->driver_data;
+	// name = id->name;
+	// irq = client->irq;
 
 
 	/*IIO configuration*/
@@ -168,23 +193,21 @@ static int bmp280_probe(struct i2c_client *client, const struct i2c_device_id *i
 	dev_set_drvdata(dev, indio_dev);		
 
 	dev_info(&client->dev, "BMP280 Probe Started\n");
-
-	return devm_iio_device_register(dev, indio_dev);	//Device managed device registration in the iio subsystem
 }
 
 
 /*Device Tree Match Table*/
 static const struct of_device_id bmp280_of_i2c_match[] = {
-	{ .compatible = "bosch, bmp280", .data = (void *)BMP280_CHIP_ID },
+	{ .compatible = "bosch,bmp280", .data = (void *)BMP280_CHIP_ID },
 	{ },
-}
+};
 MODULE_DEVICE_TABLE(of, bmp280_of_i2c_match);
 
 /*ID Match Table*/
 static const struct i2c_device_id bmp280_i2c_id[] = {
 	{"bmp280", BMP280_CHIP_ID },
 	{ },
-}
+};
 MODULE_DEVICE_TABLE(i2c, bmp280_i2c_id);
 
 /*Driver Structure*/
