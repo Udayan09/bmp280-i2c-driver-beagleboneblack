@@ -2,7 +2,7 @@ obj-m := bmp280.o
 
 ARCH=arm
 CROSS_COMPILE=arm-linux-gnueabihf-
-KERN_DIR=/home/udayan/BBBWorkspace/ldd/source/linux/
+KERN_DIR=/home/udayan/BBBWorkspace/ldd/source/linux-6.19/KERNEL
 HOST_KERN_DIR= /lib/modules/$(shell uname -r)/build/
 PWD := $(shell pwd)
 
