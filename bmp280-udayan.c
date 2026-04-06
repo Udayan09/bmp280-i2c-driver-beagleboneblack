@@ -10,7 +10,7 @@
 #include <linux/regmap.h>
 
 
-#include "bmp280.h"
+#include "bmp280-udayan.h"
 
 
 
